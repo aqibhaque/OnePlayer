@@ -11,66 +11,84 @@ class MainActivity : AppCompatActivity(),
     BookListFragment.OnBookSelectedListener {
 
     private val bookViewModel: BookViewModel by viewModels()
+
     private var isTwoPane = false
+
+    companion object {
+        private const val STATE_TWO_PANE = "twoPane"
+        private const val TAG_LIST = "bookList"
+        private const val TAG_SINGLE_PLAYER = "singlePlayer"
+        private const val TAG_TWO_PANE_PLAYER = "twoPanePlayer"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         isTwoPane =
-            findViewById<View?>(R.id.bookDetailContainer) != null
+            findViewById<View>(R.id.bookDetailContainer) != null
 
         val previousTwoPane =
-            savedInstanceState?.getBoolean("twoPane")
+            savedInstanceState?.getBoolean(STATE_TWO_PANE)
 
-        if (previousTwoPane != null &&
-            previousTwoPane != isTwoPane
-        ) {
-            supportFragmentManager.popBackStackImmediate(
+        val layoutChanged =
+            previousTwoPane != null &&
+                    previousTwoPane != isTwoPane
+
+        val manager = supportFragmentManager
+
+        if (layoutChanged) {
+            manager.popBackStackImmediate(
                 null,
                 FragmentManager.POP_BACK_STACK_INCLUSIVE
             )
 
-            val transaction =
-                supportFragmentManager.beginTransaction()
-
-            supportFragmentManager.fragments.forEach {
-                transaction.remove(it)
+            if (!isTwoPane) {
+                manager.findFragmentByTag(
+                    TAG_TWO_PANE_PLAYER
+                )?.let { oldPlayer ->
+                    manager.beginTransaction()
+                        .remove(oldPlayer)
+                        .commitNow()
+                }
             }
-
-            transaction.commitNow()
         }
 
         if (isTwoPane) {
             setupTwoPane()
         } else {
             setupSinglePane()
+
+            if (previousTwoPane == true &&
+                bookViewModel.getSelectedBook() != null
+            ) {
+                showBookPlayer()
+            }
         }
     }
 
     private fun setupTwoPane() {
         val manager = supportFragmentManager
 
-        if (manager.findFragmentById(
-                R.id.bookListContainer
-            ) == null
-        ) {
+        if (manager.findFragmentByTag(TAG_LIST) == null) {
             manager.beginTransaction()
-                .add(
+                .replace(
                     R.id.bookListContainer,
-                    BookListFragment()
+                    BookListFragment(),
+                    TAG_LIST
                 )
                 .commitNow()
         }
 
-        if (manager.findFragmentById(
-                R.id.bookDetailContainer
+        if (manager.findFragmentByTag(
+                TAG_TWO_PANE_PLAYER
             ) == null
         ) {
             manager.beginTransaction()
-                .add(
+                .replace(
                     R.id.bookDetailContainer,
-                    BookPlayerFragment()
+                    BookPlayerFragment(),
+                    TAG_TWO_PANE_PLAYER
                 )
                 .commitNow()
         }
@@ -79,22 +97,20 @@ class MainActivity : AppCompatActivity(),
     private fun setupSinglePane() {
         val manager = supportFragmentManager
 
-        if (manager.findFragmentById(
-                R.id.bookListContainer
-            ) != null
-        ) {
-            return
-        }
+        val existingList =
+            manager.findFragmentByTag(TAG_LIST)
 
-        manager.beginTransaction()
-            .add(
-                R.id.bookListContainer,
-                BookListFragment()
-            )
-            .commitNow()
+        val existingPlayer =
+            manager.findFragmentByTag(TAG_SINGLE_PLAYER)
 
-        if (bookViewModel.getSelectedBook() != null) {
-            showBookPlayer()
+        if (existingList == null && existingPlayer == null) {
+            manager.beginTransaction()
+                .replace(
+                    R.id.bookListContainer,
+                    BookListFragment(),
+                    TAG_LIST
+                )
+                .commitNow()
         }
     }
 
@@ -105,24 +121,27 @@ class MainActivity : AppCompatActivity(),
     }
 
     private fun showBookPlayer() {
-        if (supportFragmentManager.findFragmentById(
-                R.id.bookListContainer
-            ) is BookPlayerFragment
+        val manager = supportFragmentManager
+
+        if (manager.findFragmentByTag(
+                TAG_SINGLE_PLAYER
+            ) != null
         ) {
             return
         }
 
-        supportFragmentManager.beginTransaction()
+        manager.beginTransaction()
             .replace(
                 R.id.bookListContainer,
-                BookPlayerFragment()
+                BookPlayerFragment(),
+                TAG_SINGLE_PLAYER
             )
             .addToBackStack(null)
             .commit()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        outState.putBoolean("twoPane", isTwoPane)
+        outState.putBoolean(STATE_TWO_PANE, isTwoPane)
         super.onSaveInstanceState(outState)
     }
 }
