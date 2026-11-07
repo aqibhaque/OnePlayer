@@ -16,4 +16,9 @@ class BookList {
     fun size(): Int {
         return books.size
     }
+
+    fun replaceBooks(newBooks: List<Book>) {
+        books.clear()
+        books.addAll(newBooks)
+    }
 }

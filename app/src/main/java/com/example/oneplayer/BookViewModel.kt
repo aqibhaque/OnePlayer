@@ -2,6 +2,7 @@
 package com.example.oneplayer
 
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 
@@ -9,20 +10,10 @@ class BookViewModel(
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    val bookList = BookList().apply {
-        add(Book("The Great Gatsby", "F. Scott Fitzgerald"))
-        add(Book("To Kill a Mockingbird", "Harper Lee"))
-        add(Book("1984", "George Orwell"))
-        add(Book("Pride and Prejudice", "Jane Austen"))
-        add(Book("The Hobbit", "J.R.R. Tolkien"))
-        add(Book("Moby Dick", "Herman Melville"))
-        add(Book("The Catcher in the Rye", "J.D. Salinger"))
-        add(Book("The Alchemist", "Paulo Coelho"))
-        add(Book("Brave New World", "Aldous Huxley"))
-        add(Book("The Lord of the Rings", "J.R.R. Tolkien"))
-        add(Book("Jane Eyre", "Charlotte Bronte"))
-        add(Book("Frankenstein", "Mary Shelley"))
-    }
+    val bookList = BookList()
+
+    private val _booksChanged = MutableLiveData(0)
+    val booksChanged: LiveData<Int> = _booksChanged
 
     val selectedBookIndex: LiveData<Int> =
         savedStateHandle.getLiveData("selectedBookIndex")
@@ -41,5 +32,14 @@ class BookViewModel(
         } else {
             null
         }
+    }
+
+    fun replaceBooks(newBooks: List<Book>) {
+        bookList.replaceBooks(newBooks)
+
+        savedStateHandle["selectedBookIndex"] = -1
+
+        _booksChanged.value =
+            (_booksChanged.value ?: 0) + 1
     }
 }

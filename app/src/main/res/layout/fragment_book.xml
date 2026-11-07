@@ -1,11 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:gravity="center"
     android:padding="24dp">
+
+    <ImageView
+        android:id="@+id/selectedBookCoverImageView"
+        android:layout_width="120dp"
+        android:layout_height="160dp"
+        android:layout_marginBottom="16dp"
+        android:scaleType="fitCenter"
+        android:contentDescription="Book cover"
+        android:visibility="gone"
+        tools:visibility="visible"
+        tools:src="@android:drawable/ic_menu_gallery" />
 
     <TextView
         android:id="@+id/selectedBookTitleTextView"
@@ -15,8 +27,7 @@
         android:textSize="28sp"
         android:textStyle="bold"
         android:textColor="?android:attr/textColorPrimary"
-        tools:text="The Great Gatsby"
-        xmlns:tools="http://schemas.android.com/tools" />
+        tools:text="Book Title" />
 
     <TextView
         android:id="@+id/selectedBookAuthorTextView"
@@ -26,7 +37,6 @@
         android:gravity="center"
         android:textSize="18sp"
         android:textColor="?android:attr/textColorSecondary"
-        tools:text="F. Scott Fitzgerald"
-        xmlns:tools="http://schemas.android.com/tools" />
+        tools:text="Author Name" />
 
 </LinearLayout>

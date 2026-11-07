@@ -1,4 +1,3 @@
-
 package com.example.oneplayer
 
 import android.os.Bundle
@@ -28,7 +27,7 @@ class BookListFragment : Fragment(R.layout.fragment_book_list) {
         recyclerView.layoutManager =
             LinearLayoutManager(requireContext())
 
-        recyclerView.adapter = BookAdapter(
+        val adapter = BookAdapter(
             bookViewModel.bookList
         ) { position ->
 
@@ -36,6 +35,12 @@ class BookListFragment : Fragment(R.layout.fragment_book_list) {
 
             (activity as? OnBookSelectedListener)
                 ?.onBookSelected()
+        }
+
+        recyclerView.adapter = adapter
+
+        bookViewModel.booksChanged.observe(viewLifecycleOwner) {
+            adapter.notifyDataSetChanged()
         }
     }
 }

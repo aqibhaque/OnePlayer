@@ -1,11 +1,16 @@
 
 package com.example.oneplayer
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.widget.Button
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.FragmentManager
+import org.json.JSONArray
 
 class MainActivity : AppCompatActivity(),
     BookListFragment.OnBookSelectedListener {
@@ -21,12 +26,61 @@ class MainActivity : AppCompatActivity(),
         private const val TAG_TWO_PANE_PLAYER = "twoPanePlayer"
     }
 
+    private val searchLauncher =
+        registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+
+            if (result.resultCode == RESULT_OK) {
+                val response = result.data?.getStringExtra(
+                    SearchActivity.EXTRA_RESULTS_JSON
+                ) ?: return@registerForActivityResult
+
+                try {
+                    val jsonArray = JSONArray(response)
+                    val books = ArrayList<Book>()
+
+                    for (i in 0 until jsonArray.length()) {
+                        val jsonBook = jsonArray.getJSONObject(i)
+
+                        val book = Book(
+                            title = jsonBook.getString("book_title"),
+                            author = jsonBook.getString("author_name"),
+                            id = jsonBook.getInt("book_id"),
+                            coverURI = jsonBook.getString("cover_uri")
+                        )
+
+                        books.add(book)
+                    }
+
+                    bookViewModel.replaceBooks(books)
+                    showBookListAfterSearch()
+
+                } catch (e: Exception) {
+                    Toast.makeText(
+                        this,
+                        "Unable to display search results",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         isTwoPane =
             findViewById<View>(R.id.bookDetailContainer) != null
+
+        findViewById<Button>(R.id.searchButton)
+            .setOnClickListener {
+                val intent = Intent(
+                    this,
+                    SearchActivity::class.java
+                )
+                searchLauncher.launch(intent)
+            }
 
         val previousTwoPane =
             savedInstanceState?.getBoolean(STATE_TWO_PANE)
@@ -120,6 +174,15 @@ class MainActivity : AppCompatActivity(),
             )
             .addToBackStack(TAG_SINGLE_PLAYER)
             .commit()
+    }
+
+    private fun showBookListAfterSearch() {
+        if (!isTwoPane) {
+            supportFragmentManager.popBackStackImmediate(
+                null,
+                FragmentManager.POP_BACK_STACK_INCLUSIVE
+            )
+        }
     }
 
     private fun removeFragment(tag: String) {
